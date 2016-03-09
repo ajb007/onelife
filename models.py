@@ -2,7 +2,7 @@ from app import db
 from sqlalchemy.dialects.postgresql import JSON
 
 
-class Result(db.Model):
+class Player(db.Model):
     __tablename__ = 'player'
 
     id = db.Column(db.Integer, primary_key=True)
