@@ -1,6 +1,5 @@
 import json
 from macros import roll
-import move
 from constants import D_CIRCLE
 
 playerTypes = ""
