@@ -1,0 +1,124 @@
+{
+  "type": "object",
+  "description":"Account Json Schema",
+  "properties": {
+    "payload": {
+      "type":"string",
+      "description":"Name of payload"
+    },
+    "account": {
+      "type": "object",
+      "description":"Structure to store account information",
+      "properties": {
+        "main": {
+          "type": "object",
+          "description":"Main information",
+          "properties": {
+            "id": {
+              "type": "integer",
+              "description":"Unique account identifier"
+            },
+            "name": {
+              "type": "string",
+              "description":"Account name"
+            },
+            "lcname": {
+              "type": "string",
+              "description":"Account name lowercase"
+            },
+            "password": {
+              "type": "string",
+              "description":"Password hash"
+            },
+            "last_reset": {
+              "type": "string",
+              "description":"Time of last password reset "
+            },
+            "email": {
+              "type": "string",
+              "description":"Creator e-mail"
+            },
+            "lc_email": {
+              "type": "string",
+              "description":"E-mail in lowercase"
+            },
+            "confirmation": {
+              "type": "boolean",
+              "description":"First time confirmation"
+            }
+          }
+        },
+        "creation": {
+          "type": "object",
+          "description":"Creation information",
+          "properties": {
+            "parent_ip": {
+              "type": "string",
+              "description":"Created from this address"
+            },
+            "parent_network": {
+              "type": "string",
+              "description":"Created from this network"
+            },
+            "date_created": {
+              "type": "string",
+              "description":"Created at this time"
+            }
+          }
+        },
+        "previous": {
+          "type": "object",
+          "description":"Previous user information",
+          "properties": {
+            "last_ip": {
+              "type": "string",
+              "description":"Last IP or DNS address"
+            },
+            "last_network": {
+              "type": "string",
+              "description":"Last IP or DNS network"
+            },
+            "last_load": {
+              "type": "string",
+              "description":"Time last accessed"
+            },
+            "login_count": {
+              "type": "integer",
+              "description":"Number of times account used"
+            }
+          }
+        },
+        "hack_foilers": {
+          "type": "object",
+          "description":"hack foilers",
+          "properties": {
+            "bad_passwords": {
+              "type": "integer",
+              "description":"Unsuccessful load attempts"
+            },
+            "hack_count": {
+              "type": "integer",
+              "description":"Number of alleged hacks"
+            },
+            "reject_count": {
+              "type": "integer",
+              "description":"Times given a reject tag"
+            },
+            "last_hack": {
+              "type": "string",
+              "description":"Time of the last hack"
+            },
+            "mute_count": {
+              "type": "integer",
+              "description":"Times account muted"
+            },
+            "last_mute": {
+              "type": "string",
+              "description":"Time of last mute"
+            }
+          }
+        }
+      }
+    }
+  }
+}

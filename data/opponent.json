@@ -1,0 +1,96 @@
+{
+  "type": "object",
+  "description" : "Opponent attributes for battle",
+  "properties": {
+    "opponent": {
+      "type": "object",
+      "description" : "Opponent information",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description" : "Opponent name"
+        },
+        "real_name": {
+          "type": "string",
+          "description" : "Opponent's real name"
+        },
+        "type": {
+          "type": "integer",
+          "description" : "Opponent type"
+        },
+        "process_id": {
+          "type": "integer",
+          "description" : "IT combat opponent process ID"
+        }
+      }
+    },
+    "stats": {
+      "type": "object",
+      "description" : "Opponent stats",
+      "properties": {
+        "experience": {
+          "type": "number",
+          "description" : "Experience"
+        },
+        "strength": {
+          "type": "number",
+          "description" : "Strength"
+        },
+        "max_strength": {
+          "type": "number",
+          "description" : "Max strength"
+        },
+        "energy": {
+          "type": "number",
+          "description" : "Energy"
+        },
+        "max_energy": {
+          "type": "number",
+          "description" : "Max energy"
+        },
+        "speed": {
+          "type": "number",
+          "description" : "Speed"
+        },
+        "max_speed": {
+          "type": "number",
+          "description" : "Max speed"
+        },
+        "brains": {
+          "type": "number",
+          "description" : "Brains"
+        },
+        "size": {
+          "type": "number",
+          "description" : "Monster size"
+        },
+        "sin": {
+          "type": "number",
+          "description" : "Sin"
+        }
+      }
+    },
+    "battle": {
+      "type": "object",
+      "description" : "Battle info",
+      "properties": {
+        "shield": {
+          "type": "number",
+          "description" : "Shield"
+        },
+        "special_type": {
+          "type": "integer",
+          "description" : "Special monster flag"
+        },
+        "treasure_type": {
+          "type": "integer",
+          "description" : "Treasure type"
+        },
+        "flock_percent": {
+          "type": "integer",
+          "description" : "Percent chance of flocking"
+        }
+      }
+    }
+  }
+}

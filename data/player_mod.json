@@ -1,0 +1,42 @@
+player_mod_j ={
+   "type":"object",
+   "description":"Information to modify an account",
+   "properties":{
+      "new_name":{
+         "type":"string",
+         "description":"Is there a new name"
+      },
+      "name":{
+         "type":"string",
+         "description":"Character's new name"
+      },
+      "lcname":{
+         "type":"string",
+         "description":"Character's new name lowercase"
+      },
+      "new_password":{
+         "type":"boolean",
+         "description":"Is there a new password?"
+      },
+      "password":{
+         "type":"string",
+         "description":"Hash of the new password"
+      },
+      "password_reset":{
+         "type":"boolean",
+         "description":"Is the password being reset?"
+      },
+      "new_permissions":{
+         "type":"boolean",
+         "description":"Are we sending a perm change?"
+      },
+      "faithful":{
+         "type":"boolean",
+         "description":"Is the character faithful"
+      },
+      "bad_passwords":{
+         "type":"boolean",
+         "description":"Load attempt"
+      }
+   }
+}
