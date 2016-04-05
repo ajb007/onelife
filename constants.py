@@ -491,3 +491,12 @@ H_DISRESPECTFUL            = 5     # disrespectful to wizards
 H_FLOOD                    = 6     # flooding chat
 H_SPAM                     = 7     # spamming chat
 H_WHIM                     = 8     # wizard's whim
+
+B_NORTH                    = 0     # button North pressed
+B_NORTH_EAST               = 1     # button North East pressed
+B_EAST                     = 2     # button East pressed
+B_SOUTH_EAST               = 3     # button South East pressed
+B_SOUTH                    = 4     # button South pressed
+B_SOUTH_WEST               = 5     # button South West pressed
+B_WEST                     = 6     # button West pressed
+B_NORTH_WEST               = 7     # button North West pressed

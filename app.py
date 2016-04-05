@@ -2,18 +2,21 @@ from flask import Flask, jsonify, request, send_from_directory, abort, make_resp
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.orm.attributes import flag_modified
 import os
-import constants
+from constants import MOVE_EVENT, MONSTER_EVENT
 from jsonschema import validate
 import json
-import playerTypes
+from event import randomEvent
+from fight import rollMonster
 
 app = Flask(__name__, static_folder='data')
 app.config.from_object(os.environ['APP_SETTINGS'])
 db = SQLAlchemy(app)
 
-playerTypes.init()
-
 from models import *
+import playerTypes
+from move import *
+
+playerTypes.init()
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -32,7 +35,6 @@ def login():
         if result != 0:
             account = Account.query.get(id).account
             account["account"]["main"]["id"] = id[0]
-            print(account)
             result = jsonify(account)
         else:
             result = {"result":"failure", "reason":"Incorrect account name or password"}
@@ -78,52 +80,50 @@ def create_account():
     else:
         result = {"result":"failure", "reason":"Invalid schema for Account"}
         abort(400, result)
-    print(result)
     return jsonify(result), 201
 
 #curl -i -X GET http://localhost:5000/create_player/Elf
 # curl -i -H "Content-Type: application/json" -X POST -d '{"name":"Drew","xpos":0,"ypos":0,"action":0}' http://localhost:5000/create_player
-@app.route('/create_player/<string:playerType>', methods=['GET'])
-def create_player(playerType):
-    result = playerTypes.rollPlayerType(playerType)
-    return jsonify(result[0]), 201
+@app.route('/create_player', methods=['POST'])
+def create_player():
+    if not request.json:
+        abort(400)
+    print(request.json)
+    result = playerTypes.rollPlayerType(request.json)
+    return jsonify(result), 201
 
 @app.route('/save_player', methods=['POST'])
 def save_player():
     if not request.json:
         abort(400)
-    player = request.json
-
-    cursor = db.session.execute("SELECT count(*) c FROM player WHERE playerb #>> '{name}' = '%s'" % player["name"])
+    player_json = request.json
+    cursor = db.session.execute("SELECT count(*) c FROM player WHERE playerb #>> '{name}' = '%s'" % player_json["player"]["main"]["name"])
     result=cursor.fetchone()
     result = result[0]
     if result == 0:
         try:
-            print(player["account_id"])
-            player = Player(player=player, account_id=player["account_id"])
+            player = Player(player=player_json, account_id=player_json["player"]["main"]["account_id"])
             db.session.add(player)
+            db.session.commit()
+            player_json["player"]["main"]["id"] = player.id
+            player.player = player_json
             db.session.commit()
             result = {"result":"success", "reason":"","id":player.id}
         except Exception as e:
             raise
     else:
-        result = {"result":"failure", "reason":"Character name already exists"}
+        result = {"result":"failure", "reason":"Character name already exists in realm"}
         abort(400, result)
 
     return jsonify(result), 201
 
 @app.errorhandler(400)
 def not_found(error):
-    print("*****here*****")
-    print(error)
-    print(error.description)
     return jsonify(error.description), 400
 
 @app.route('/players/<int:account_id>', methods=['GET'])
 def get_players(account_id):
     players = Player.query.with_entities(Player.player).filter(Player.account_id == account_id).all()
-    print(players)
-    print(len(players))
     #if player == None:
 #        abort(404)
     return jsonify({'players': players}), 201
@@ -131,7 +131,6 @@ def get_players(account_id):
 @app.route('/player/<int:id>', methods=['GET'])
 def get_player(id):
     player = Player.query.get(id).player
-    print(player)
     #if player == None:
 #        abort(404)
     return jsonify({'player': player}), 201
@@ -143,20 +142,23 @@ def update_player(id):
     # curl -i -H "Content-Type: application/json" -X PUT -d '{"name":"Drew","xpos":0,"ypos":0,"action":0}' http://localhost:5000/action/2
     # Need to validate the request
     updated_player = request.get_json()
-    event.handleEvent(updated_player)
-    event.generateEvent(updated_player)
+    # Process action
+    action = updated_player["action"]
+    if action["type"] == MOVE_EVENT:
+        doMoveAction(updated_player)
     try:
         player = Player.query.get(id)
-        player.player = {
-            'name': updated_player['name'],
-            'xpos': updated_player['xpos'],
-            'ypos': updated_player['ypos'],
-            'event': updated_player['event']
-        }
+        player.player = updated_player
         db.session.commit()
     except Exception as e:
         raise
-    return jsonify({'player': player.player}), 201
+    # Generate a reaction
+    updated_player["reaction"] = randomEvent(updated_player)
+
+    if updated_player["reaction"]["type"] == MONSTER_EVENT:
+        rollMonster(updated_player)
+
+    return jsonify(updated_player), 201
 
 @app.route('/data/<path:filename>', methods=['GET'])
 def get_data():
