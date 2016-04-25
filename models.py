@@ -2,8 +2,8 @@ from app import db
 from sqlalchemy.dialects.postgresql import JSON, JSONB
 
 
-class Player(db.Model):
-    __tablename__ = 'player'
+class Players(db.Model):
+    __tablename__ = 'players'
 
     id = db.Column(db.Integer, primary_key=True)
     account_id = db.Column(db.Integer)
@@ -18,8 +18,8 @@ class Player(db.Model):
     def __repr__(self):
         return '<id {}>'.format(self.id)
 
-class Account(db.Model):
-    __tablename__ = 'account'
+class Accounts(db.Model):
+    __tablename__ = 'accounts'
 
     id = db.Column(db.Integer, primary_key=True)
     type = db.Column(db.String)
@@ -29,6 +29,22 @@ class Account(db.Model):
     def __init__(self, account):
         self.account = account
         self.accountb = account
+
+    def __repr__(self):
+        return '<id {}>'.format(self.id)
+
+class Objects(db.Model):
+    __tablename__ = 'objects'
+
+    id = db.Column(db.Integer, primary_key=True)
+    object_type = db.Column(db.String)
+    x = db.Column(db.Integer)
+    y = db.Column(db.Integer)
+
+    def __init__(self, object_type, x, y):
+        self.type = object_type
+        self.x = x
+        self.y = y
 
     def __repr__(self):
         return '<id {}>'.format(self.id)

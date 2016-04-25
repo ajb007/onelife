@@ -2,28 +2,14 @@ import json
 from move import setCircle, setLocation, doMoveClose
 from macros import roll, calcLevel
 from constants import D_CIRCLE, PL_REALM
-from stats import doEnergy
-
-playerTypes = ""
-playerType = ""
-
-def init():
-    global playerType
-    global playerTypes
-    with open("data/playerTypes.json") as data_file:
-        data = json.load(data_file)
-    playerTypes = data["playerTypes"]
-
-def getPlayerType(type):
-    global playerType
-    global playerTypes
-    for playerType in playerTypes:
-        if playerType["type"] == type:
-            return playerType
+from stats import getPlayerType, doEnergy
 
 def rollPlayerType(payload):
 
     newPlayer = payload["player"]
+
+    newPlayer["messages"] = []
+
     main = newPlayer["main"]
     equipment = newPlayer["equipment"]
     location = newPlayer["location"]

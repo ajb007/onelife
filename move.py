@@ -132,9 +132,6 @@ def doMove(payload):
             action["arg1"] = location["x"] - doAngleMove(player)
             action["arg2"] = location["y"] + doAngleMove(player)
 
-    print(action["arg1"])
-    print(action["arg2"])
-
     if action["arg3"] == A_NEAR:
         action["arg1"] = location["x"]
         action["arg2"] = location["y"]
@@ -240,8 +237,6 @@ def doMove(payload):
 
     location["x"] = action["arg1"]
     location["y"] = action["arg2"]
-    # dispose of the action
-    del payload["action"]
 
 def doMaxMove(player):
 

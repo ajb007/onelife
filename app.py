@@ -2,21 +2,31 @@ from flask import Flask, jsonify, request, send_from_directory, abort, make_resp
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.orm.attributes import flag_modified
 import os
-from constants import MOVE_EVENT, MONSTER_EVENT
+from constants import (
+    MOVE_EVENT, MONSTER_EVENT, ATTACK_EVENT, GURU_EVENT, REST_EVENT,
+    TREASURE_EVENT, MESSAGE_RESPONSE, MONSTER_CALL, MONSTER_SPECIFY,
+    MESSAGE_YES, MESSAGE_NO, MESSAGE_NOALL
+    )
 from jsonschema import validate
 import json
-from event import randomEvent
-from fight import rollMonster
+from event import randomEvent, monsterInBattleEvent, nextEvent, stackEvent, cancelTreasureEvents
+from fight import rollMonster, doPlayerHits
+from playerTypes import rollPlayerType
+from misc import doGuru
+from stats import doSin
 
 app = Flask(__name__, static_folder='data')
 app.config.from_object(os.environ['APP_SETTINGS'])
 db = SQLAlchemy(app)
 
 from models import *
-import playerTypes
+from stats import *
 from move import *
 
-playerTypes.init()
+import treasure
+from treasure import doTreasure, _answerGems
+
+initPlayerTypes()
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -25,15 +35,15 @@ def login():
 
     cred = request.json
 
-    cursor = db.session.execute("SELECT id FROM account WHERE accountb #>> '{account,main,name}' = '%s'" % cred["name"])
+    cursor = db.session.execute("SELECT id FROM accounts WHERE accountb #>> '{account,main,name}' = '%s'" % cred["name"])
     result=cursor.fetchone()
     if result:
         id = result
-        cursor = db.session.execute("SELECT count(*) c FROM account WHERE accountb #>> '{account,main,password}' = '%s'" % cred["password"])
+        cursor = db.session.execute("SELECT count(*) c FROM accounts WHERE accountb #>> '{account,main,password}' = '%s'" % cred["password"])
         result=cursor.fetchone()
         result = result[0]
         if result != 0:
-            account = Account.query.get(id).account
+            account = Accounts.query.get(id).account
             account["account"]["main"]["id"] = id[0]
             result = jsonify(account)
         else:
@@ -61,13 +71,13 @@ def create_account():
         main = acc.get('main')
         name = main.get('name')
 
-        cursor = db.session.execute("SELECT count(*) c FROM account WHERE accountb #>> '{account,main,name}' = '%s'" % name)
+        cursor = db.session.execute("SELECT count(*) c FROM accounts WHERE accountb #>> '{account,main,name}' = '%s'" % name)
         result=cursor.fetchone()
         result = result[0]
         if result == 0:
 
             try:
-                account = Account(account=account)
+                account = Accounts(account=account)
                 db.session.add(account)
                 db.session.commit()
                 result = {"result":"success", "reason":"", "id":account.id}
@@ -88,8 +98,7 @@ def create_account():
 def create_player():
     if not request.json:
         abort(400)
-    print(request.json)
-    result = playerTypes.rollPlayerType(request.json)
+    result = rollPlayerType(request.json)
     return jsonify(result), 201
 
 @app.route('/save_player', methods=['POST'])
@@ -97,12 +106,12 @@ def save_player():
     if not request.json:
         abort(400)
     player_json = request.json
-    cursor = db.session.execute("SELECT count(*) c FROM player WHERE playerb #>> '{name}' = '%s'" % player_json["player"]["main"]["name"])
+    cursor = db.session.execute("SELECT count(*) c FROM players WHERE playerb #>> '{name}' = '%s'" % player_json["player"]["main"]["name"])
     result=cursor.fetchone()
     result = result[0]
     if result == 0:
         try:
-            player = Player(player=player_json, account_id=player_json["player"]["main"]["account_id"])
+            player = Players(player=player_json, account_id=player_json["player"]["main"]["account_id"])
             db.session.add(player)
             db.session.commit()
             player_json["player"]["main"]["id"] = player.id
@@ -123,14 +132,14 @@ def not_found(error):
 
 @app.route('/players/<int:account_id>', methods=['GET'])
 def get_players(account_id):
-    players = Player.query.with_entities(Player.player).filter(Player.account_id == account_id).all()
+    players = Players.query.with_entities(Players.player).filter(Players.account_id == account_id).all()
     #if player == None:
 #        abort(404)
     return jsonify({'players': players}), 201
 
 @app.route('/player/<int:id>', methods=['GET'])
 def get_player(id):
-    player = Player.query.get(id).player
+    player = Players.query.get(id).player
     #if player == None:
 #        abort(404)
     return jsonify({'player': player}), 201
@@ -141,37 +150,91 @@ def update_player(id):
 
     # curl -i -H "Content-Type: application/json" -X PUT -d '{"name":"Drew","xpos":0,"ypos":0,"action":0}' http://localhost:5000/action/2
     # Need to validate the request
-    updated_player = request.get_json()
-    # Process action
-    action = updated_player["action"]
-    if action["type"] == MOVE_EVENT:
-        doMoveAction(updated_player)
+    payload = request.get_json()
+    # Process action if there is one
+    if "action" in payload.keys():
+        action = payload["action"]
+        if action["type"] == MOVE_EVENT:
+            doMoveAction(payload)
+        elif action["type"] == ATTACK_EVENT:
+            doPlayerHits(payload)
+        elif action["type"] == REST_EVENT:
+            doRest(payload["player"])
+        elif action["type"] == MESSAGE_RESPONSE:
+            if action["arg1"] == MESSAGE_YES:
+                msg = dict(action["message"])
+                methodToCall = getattr(treasure, msg["callback"])
+                methodToCall(payload)
+            if action["arg1"] == MESSAGE_NO and action["message"] != "":
+                # may want to do something on a "No" response. E.g. refuse ring to Nazgul
+                msg = dict(action["message"])
+                methodToCall = getattr(treasure, msg["callback"])
+                methodToCall(payload)
+            if action["arg1"] == MESSAGE_NOALL:
+                # Only applicable to cancelling all treasure_type
+                cancelTreasureEvents(payload)
+        elif action["type"] == MONSTER_EVENT and action["arg1"] == MONSTER_CALL:
+            # Monster hunted. Stack the event
+            doSin(payload["player"], .001)
+            event = newEvent(action["type"], action["arg1"], action["arg2"], action["arg3"], "")
+            stackEvent(payload, event)
+        elif action["type"] == MONSTER_EVENT and action["arg1"] == MONSTER_SPECIFY:
+            print("Scroll Picked")
+            # stack the event and process it straight away
+            event = newEvent(action["type"], action["arg1"], action["arg2"], action["arg3"], "")
+            stackEvent(payload, event)
+            payload["reaction"] = nextEvent(payload)
+            rollMonster(payload)
+        # remove the action now that we are done with it
+        del payload["action"]
+
+    # Save the payload
     try:
-        player = Player.query.get(id)
-        player.player = updated_player
+        player = Players.query.get(id)
+        player.player = payload
         db.session.commit()
     except Exception as e:
         raise
-    # Generate a reaction
-    updated_player["reaction"] = randomEvent(updated_player)
 
-    if updated_player["reaction"]["type"] == MONSTER_EVENT:
-        rollMonster(updated_player)
+    # if the opponent no longer exists then we are done with the battle
+    inBattle = False
+    if "battle" in payload["player"].keys():
+        battle = payload["player"]["battle"]
+        if "opponent" in battle.keys():
+            if battle["opponent"]["energy"] > 0:
+                # still in battle. Regenerate the monster event
+                inBattle = True
+                payload["reaction"] = monsterInBattleEvent(payload)
+                return jsonify(payload), 201
 
-    return jsonify(updated_player), 201
+    # Check if there is a stacked event
+    if "events" in payload.keys():
+        if len(payload["events"]) > 0:
+            payload["reaction"] = nextEvent(payload)
+    # Else generate a reaction
+    elif not inBattle:
+        payload["reaction"] = randomEvent(payload)
+
+    # Process the reaction now if we can
+
+    if payload["reaction"]["type"] == MONSTER_EVENT and payload["reaction"]["arg1"] != MONSTER_SPECIFY:
+        rollMonster(payload)
+    elif payload["reaction"]["type"] == GURU_EVENT:
+        doGuru(payload)
+    elif payload["reaction"]["type"] == TREASURE_EVENT and payload["reaction"]["message"] == "":
+        doTreasure(payload)
+
+    return jsonify(payload), 201
 
 @app.route('/data/<path:filename>', methods=['GET'])
 def get_data():
     return send_from_directory(app.static_folder, filename)
 
-# Player Event: Client is checking for queued events. Return event for the
-# client to respond
-@app.route('/event/<int:id>', methods=['GET'])
+# Not in use
+@app.route('/answer/<int:id>', methods=['PUT'])
 def player_event(id):
     # curl -i GET http://localhost:5000/event/2
-    player = Player.query.get(id).player
-    player = event.checkForEvent(player)
-    return jsonify({'player': player}), 201
+    return jsonify(payload), 201
 
 
 @app.route('/')

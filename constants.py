@@ -137,6 +137,13 @@ CINC_EVENT                = 86      # restoration of currency
 AGING_EVENT               = 87      # Age restore
 ITEMINC_EVENT             = 88      # Restores items
 
+# attack events
+ATTACK_EVENT              = 90      # Attack a monster
+ATTACK_MELEE              = 91      # Normal melee
+ATTACK_SKIRMISH           = 92      # Reduces some monster stats
+ATTACK_SPELL              = 93      # Use a spell
+ATTACK_LUCKOUT            = 94      # Brains battle
+ATTACK_NICK               = 95      # Small hit but takes exp from monster
 
 # realm objects
 # events after this are made realm objects on orphan
@@ -500,3 +507,14 @@ B_SOUTH                    = 4     # button South pressed
 B_SOUTH_WEST               = 5     # button South West pressed
 B_WEST                     = 6     # button West pressed
 B_NORTH_WEST               = 7     # button North West pressed
+
+MESSAGE_NORMAL             = 0     # message to player
+MESSAGE_BROADCAST          = 1     # message to everyone
+MESSAGE_MORE               = 2     # More button
+MESSAGE_CLEAR              = 3     # Clear text box after message
+MESSAGE_YESNO              = 4     # YesNo answer required
+MESSAGE_YESNO_NOALL        = 5     # Yes, No and No All answer required
+MESSAGE_YES                = 6     # Yes message response
+MESSAGE_NO                 = 7     # No message response
+MESSAGE_NOALL              = 8     # No All response
+MESSAGE_RESPONSE           = 9     # Message Response to server
