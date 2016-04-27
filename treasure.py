@@ -25,8 +25,6 @@ def doTreasure(payload):
     event = payload["reaction"]
     location = player["location"]
 
-    event["arg2"] = 3
-
     # make a mutable copy of the current event. We will need it back after client response
     cpEvent = copy.deepcopy(event)
     # Gold and gems only in circles that aren't fully beyond
@@ -177,13 +175,6 @@ def _answerOther(payload):
         else:
             # pick a treasure
             whichtreasure = int(roll(1.0, 3.0))
-
-        event["arg1"] = 201
-        event["arg2"] = 4
-        event["arg3"] = 14
-        whichtreasure = 1
-        equipment["ring_type"] = R_DLREG
-        equipment["palantir"] = True
 
         if event["arg3"] == 1:
             # Treasure Type 1
