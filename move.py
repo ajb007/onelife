@@ -8,8 +8,10 @@ from constants import (
     PL_REALM, PL_THRONE, PL_EDGE, PL_VALHALLA, PL_PURGATORY, D_CIRCLE,
     A_NEAR, A_FAR, A_BANISH, A_OUST, A_TRANSPORT, A_FORCED, A_SPECIFIC, A_TELEPORT,
     D_EDGE, D_BEYOND, DEATH_EVENT, K_FELL_OFF,
-    B_NORTH, B_NORTH_EAST, B_EAST, B_SOUTH_EAST, B_SOUTH, B_SOUTH_WEST, B_WEST, B_NORTH_WEST
+    B_NORTH, B_NORTH_EAST, B_EAST, B_SOUTH_EAST, B_SOUTH, B_SOUTH_WEST, B_WEST, B_NORTH_WEST,
+    MESSAGE_CLEAR
 )
+from messages import message
 def setLocation(location):
 
     quadrant = 0       # quandrant of grid
@@ -249,3 +251,121 @@ def doMaxMove(player):
 
 def doAngleMove(player):
     return int(max(1.0, floor(doMaxMove(player) * .707106781)))
+
+def doTeleport(payload):
+
+    print("doTeleport")
+
+    event = payload["action"]
+    player = payload["player"]
+    location = player["location"]
+
+    print(event["arg2"])
+
+    if event["arg2"] == True:
+        print(event["message"]["x"])
+        print(event["message"]["y"])
+        location["x"] = event["message"]["x"]
+        location["y"] = event["message"]["y"]
+        setCircle(location)
+        setLocation(location)
+        message(player, ["", MESSAGE_CLEAR])
+"""
+{
+    struct event_t *event_ptr;
+    struct event_t *event2_ptr;
+    double distance, mana = 0;
+    double dtemp;
+    int tempcircle;
+    char string_buffer[SZ_LINE];
+    long answer;
+
+    event_ptr = (struct event_t *) Do_create_event();
+    event_ptr->type = MOVE_EVENT;
+    event_ptr->arg3 = A_FORCED;
+
+    if (Do_coords_dialog(c, &event_ptr->arg1, &event_ptr->arg2,
+	    "Where do you wish to teleport to?\n")) {
+
+	free((void *)event_ptr);
+	return;
+    }
+
+    Do_distance(event_ptr->arg1, 0.0, event_ptr->arg2, 0.0, &distance);
+    tempcircle = floor(distance / D_CIRCLE + 1);
+
+        /* block non-Gwaihir teleports into the Marshes/Cracks */
+    if (the_event->arg2 == FALSE &&
+        (tempcircle > 19 && tempcircle < 36)) {
+        Do_send_line(c, "You try to teleport into the Marshes, but a mysterious force prevents you!\n");
+	Do_more(c);
+	Do_send_clear(c);
+        return;
+    }
+
+	/* did the player teleport himself? */
+    if (the_event->arg3 == TRUE) {
+
+	Do_distance(c->player.x, event_ptr->arg1, c->player.y,
+		event_ptr->arg2, &distance);
+
+	mana = ceil(distance * distance / (30 * c->player.magiclvl));
+
+	    /* make sure player has enough mana */
+	if (mana > c->player.mana) {
+
+	    free((void *) event_ptr);
+
+	    sprintf(string_buffer,
+	       "You do not have the %.0lf mana that teleport would require.\n",
+	       mana);
+
+	    Do_send_line(c, string_buffer);
+	    Do_more(c);
+	    Do_send_clear(c);
+	    return;
+	}
+	else {
+
+	    sprintf(string_buffer,
+	      "That teleport will cost %.0lf mana.  Do you wish to cast it?\n",
+	      mana);
+
+	    Do_send_line(c, string_buffer);
+
+            if (Do_yes_no(c, &answer) != S_NORM || answer == 1) {
+	        free((void *) event_ptr);
+	        Do_send_clear(c);
+                return;
+            }
+	}
+
+	Do_mana(c, -mana, FALSE);
+	event_ptr->arg3 = A_TELEPORT;
+    }
+
+
+
+    Do_handle_event(c, event_ptr);
+
+        /* did the player use Gwaihir? */
+    if (the_event->arg2 == TRUE) {
+
+           /* is the destination a post? */
+        if (event_ptr->arg1 == event_ptr->arg2) {
+
+            dtemp = sqrt(fabs(event_ptr->arg1)/100.0);
+
+            if (floor(dtemp) == dtemp) {
+
+                   /* bypass the monster check */
+                event2_ptr = (struct event_t *) Do_create_event();
+                event2_ptr->type = TRADING_EVENT;
+                Do_handle_event(c, event2_ptr);
+            }
+        }
+    }
+
+    return;
+}
+"""

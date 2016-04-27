@@ -465,3 +465,28 @@ def doRest(player):
             battle["rounds"] = 0
 
     doSpeed(player, stats["max_quickness"], equipment["quicksilver"], speed_spell, False)
+
+def doPalantir(player, palantir, force):
+
+	player["equipment"]["palantir"] = palantir
+
+"""
+    TODO: Channel Stuff with palantir
+    # if no palantir, kick player out of the palantir channel
+    if ((c->player.palantir == FALSE) &&
+        (c->channel == 8)) {
+
+        c->channel = 1;
+
+        c->game->hearAllChannels = HEAR_SELF;
+
+        Do_lock_mutex(&c->realm->realm_lock);
+        Do_player_description(c);
+        Do_unlock_mutex(&c->realm->realm_lock);
+
+        Do_send_specification(c, CHANGE_PLAYER_EVENT);
+    }
+"""
+
+def doVirgin(player, virgin, force):
+	player["equipment"]["virgin"] = virgin

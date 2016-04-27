@@ -3,7 +3,7 @@ from random import random
 from math import floor, sqrt, ceil, pow
 from stats import (
     doEnergy, doSin, doSpeed, doMana, doExperience, doStrength,
-    doPalantir, doGold, doGems, doScrambleStats, doAdjustedPoison
+    doPalantir, doGold, doGems, doScrambleStats, doAdjustedPoison, doRing
 )
 from event import newEvent, handleEvent, stackEvent
 import json
@@ -699,7 +699,7 @@ def doMonsterHits(payload):
                 return
         elif opponent["special_type"] == SM_TROLL:
             # partially regenerate monster
-            message(player, ["%%s partially regenerated his energy!\n" % opponent["name"]])
+            message(player, ["%s partially regenerated his energy!\n" % opponent["name"]])
             opponent["energy"] += floor((opponent["max_energy"] - opponent["energy"]) / 2.0)
             opponent["strength"] = opponent["max_strength"]
             opponent["speed"] = opponent["max_speed"]

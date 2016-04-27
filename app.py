@@ -4,7 +4,8 @@ from sqlalchemy.orm.attributes import flag_modified
 import os
 from constants import (
     MOVE_EVENT, MONSTER_EVENT, ATTACK_EVENT, GURU_EVENT, REST_EVENT,
-    TREASURE_EVENT, MESSAGE_RESPONSE, MONSTER_CALL, MONSTER_SPECIFY,
+    TREASURE_EVENT, TELEPORT_EVENT,
+    MESSAGE_RESPONSE, MONSTER_CALL, MONSTER_SPECIFY,
     MESSAGE_YES, MESSAGE_NO, MESSAGE_NOALL
     )
 from jsonschema import validate
@@ -185,6 +186,9 @@ def update_player(id):
             stackEvent(payload, event)
             payload["reaction"] = nextEvent(payload)
             rollMonster(payload)
+        elif action["type"] == TELEPORT_EVENT:
+            print(payload["action"])
+            doTeleport(payload)
         # remove the action now that we are done with it
         del payload["action"]
 

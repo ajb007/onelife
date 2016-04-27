@@ -21,10 +21,11 @@ def rollPlayerType(payload):
     newPlayerStats = playerType["stats"][0]
 
     location["location"] = PL_REALM
-    setCircle(location)
+    #setCircle(location)
     x, y = doMoveClose(0, 0, D_CIRCLE - 1)
     location["x"] = x
     location["y"] = y
+    setCircle(location)
     setLocation(location)
     stats["energy"] = roll(newPlayerStats["energy"]["base"], newPlayerStats["energy"]["interval"])
     stats["max_energy"] = stats["energy"]
